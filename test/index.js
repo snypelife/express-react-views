@@ -10,9 +10,10 @@ var viewOptions = {
 
 function testComponent(path, cb) {
   var render = viewEngine.createEngine();
-  render(__dirname + '/es5-component.jsx', viewOptions, function(err, source) {
+  render(__dirname + '/es5-component.jsx', viewOptions, function (err, source) {
     assert(!err);
-    assert(source.indexOf('I can count to 10:1, 2, 3, 4, 5, 6, 7, 8, 9, 10') !== -1);
+    assert(source.indexOf('I can count to 10:') !== -1);
+    assert(source.indexOf('1, 2, 3, 4, 5, 6, 7, 8, 9, 10') !== -1);
     cb();
   });
 }

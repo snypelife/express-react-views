@@ -7,6 +7,7 @@
  *  of patent rights can be found in the PATENTS file in the same directory.
  */
 
+var path = require('path');
 var React = require('react');
 var ReactDOMServer = require('react-dom/server');
 var beautifyHTML = require('js-beautify').html;
@@ -23,7 +24,17 @@ var DEFAULT_OPTIONS = {
       'es2015',
     ],
   },
+  root: 'default'
 };
+
+function omit(source, filterList) {
+  return Object.keys(source).reduce(function (prev, curr) {
+    if (filterList.indexOf(curr) !== -1) {
+      prev[curr] = source[curr];
+    }
+    return prev;
+  }, {});
+}
 
 function createEngine(engineOptions) {
   var registered = false;
@@ -32,32 +43,40 @@ function createEngine(engineOptions) {
   engineOptions = assign({}, DEFAULT_OPTIONS, engineOptions || {});
 
   function renderFile(filename, options, cb) {
+    var settings = options.settings;
+    var rootPath = path.join(settings.views, engineOptions.root + '.jsx');
     // Defer babel registration until the first request so we can grab the view path.
     if (!moduleDetectRegEx) {
       // Path could contain regexp characters so escape it first.
-      moduleDetectRegEx = new RegExp('^' + _escaperegexp(options.settings.views));
+      moduleDetectRegEx = new RegExp('^' + _escaperegexp(settings.views));
     }
     if (engineOptions.transformViews && !registered) {
       // Passing a RegExp to Babel results in an issue on Windows so we'll just
       // pass the view path.
       require('babel-register')(
-        assign({only: options.settings.views}, engineOptions.babel)
+        assign({only: settings.views}, engineOptions.babel)
       );
       registered = true;
     }
 
     try {
+      if (filename === rootPath) {
+        throw new Error('Error:: Don\'t try to render the root view directly!');
+      }
+      var props = omit(options, ['settings', '_locals', 'cache']);
+      var Root = require(rootPath);
       var markup = engineOptions.doctype;
       var component = require(filename);
       // Transpiled ES6 may export components as { default: Component }
-      component = component.default || component;
+      Root = Root.default || Root;
+      props.View = component.default || component;
       markup += ReactDOMServer.renderToStaticMarkup(
-        React.createElement(component, options)
+        React.createElement(Root, props)
       );
     } catch (e) {
       return cb(e);
     } finally {
-      if (options.settings.env === 'development') {
+      if (['development', 'local'].includes(settings.env)) {
         // Remove all files from the module cache that are in the view folder.
         Object.keys(require.cache).forEach(function(module) {
           if (moduleDetectRegEx.test(require.cache[module].filename)) {
