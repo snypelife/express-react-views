@@ -29,7 +29,7 @@ var DEFAULT_OPTIONS = {
 
 function omit(source, filterList) {
   return Object.keys(source).reduce(function (prev, curr) {
-    if (filterList.indexOf(curr) !== -1) {
+    if (filterList.indexOf(curr) === -1) {
       prev[curr] = source[curr];
     }
     return prev;
