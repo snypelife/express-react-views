@@ -24,7 +24,7 @@ var DEFAULT_OPTIONS = {
       'es2015',
     ],
   },
-  root: 'default'
+  root: 'layout/default'
 };
 
 function omit(source, filterList) {

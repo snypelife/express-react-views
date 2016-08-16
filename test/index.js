@@ -9,7 +9,7 @@ var viewOptions = {
 };
 
 function testComponent(path, cb) {
-  var render = viewEngine.createEngine();
+  var render = viewEngine.createEngine({ root: 'default' });
   render(__dirname + '/es5-component.jsx', viewOptions, function (err, source) {
     assert(!err);
     assert(source.indexOf('I can count to 10:') !== -1);
